@@ -3,6 +3,7 @@
 > **AI 創新微課程：AIoT_L3_CWA_HW1 (進階強化版)**  
 > *「用程式探索天氣 · 用真實測站看見台灣 · 用 AI 實現更多可能」*
 
+[![Vercel Deployment](https://img.shields.io/badge/Vercel-Live_Demo-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://a-io-t-l3-cwa-hw-1-chi.vercel.app/)
 [![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.30+-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
@@ -10,6 +11,14 @@
 [![Plotly](https://img.shields.io/badge/Plotly-5.18+-3F4F75?style=for-the-badge&logo=plotly&logoColor=white)](https://plotly.com/)
 [![Folium](https://img.shields.io/badge/Folium-0.15+-77B800?style=for-the-badge&logo=leaflet&logoColor=white)](https://python-visualization.github.io/folium/)
 [![CWA Open Data](https://img.shields.io/badge/CWA-O--A0003--001-007ACC?style=for-the-badge)](https://opendata.cwa.gov.tw/)
+
+---
+
+### 🌐 線上即時展示 (Live Demo)
+
+🚀 **專案線上體驗網址**：[https://a-io-t-l3-cwa-hw-1-chi.vercel.app/](https://a-io-t-l3-cwa-hw-1-chi.vercel.app/)
+
+![台灣即時天氣觀測地圖展示](assets/preview.png)
 
 ---
 
@@ -179,7 +188,7 @@ streamlit run streamlit_app.py
      - KEY: `CWA_API_KEY`
      - VALUE: `CWA-4078E566-C632-4356-8C9F-D1B4AE74E894`
 4. **點擊「Deploy」**：
-   - 等待約 20~30 秒，Vercel 將自動完成部署，並為您產生專屬公開網址（例如 `https://aiot-l3-cwa-hw1.vercel.app`）！
+   - 等待約 20~30 秒，Vercel 將自動完成部署，並為您產生專屬公開網址：**`https://a-io-t-l3-cwa-hw-1-chi.vercel.app/`**！
 
 ---
 
@@ -187,6 +196,8 @@ streamlit run streamlit_app.py
 
 ```text
 weather-forecast/
+├── assets/
+│   └── preview.png         # 專案線上展示截圖
 ├── api/
 │   └── weather.py          # Vercel Python Serverless Function (GET /api/weather)
 ├── data/

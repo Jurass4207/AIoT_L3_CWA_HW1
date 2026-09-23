@@ -1,76 +1,38 @@
-# 🌡️ Taiwan CWA Temperature Visualization with Windy API
-### 台灣中央氣象署即時氣溫觀測 × Windy 動態氣象地圖視覺化系統
+# 🌤️ Taiwan Weather Forecast — 從氣象資料到互動式天氣預報應用
 
-> 本專案將**中央氣象署（CWA）即時測站觀測資料**精準疊加於 **Windy Map Forecast API** 動態底圖之上，透過 **FastAPI** 進行資料清洗、驗證與快取，並藉由 **Leaflet** 繪製高品質自訂觀測圖層，打造兼具專業氣象底圖與高精度地面實況的互動式天氣儀表板。
+> **AI 創新微課程：AIoT_L3_CWA_HW1**  
+> *「用程式探索天氣 · 用資料看見台灣 · 用 AI 實現更多可能」*
 
----
-
-[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![Windy API](https://img.shields.io/badge/Windy-Forecast_API-0284C7?style=for-the-badge&logo=windy&logoColor=white)](https://api.windy.com/)
-[![Leaflet](https://img.shields.io/badge/Leaflet-1.4.x-199900?style=for-the-badge&logo=leaflet&logoColor=white)](https://leafletjs.com/)
-[![React / Vite](https://img.shields.io/badge/Frontend-React%20%7C%20TypeScript-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
-[![CWA OpenData](https://img.shields.io/badge/CWA-OpenData%20Taiwan-0288D1?style=for-the-badge)](https://opendata.cwa.gov.tw/)
-
----
-
-## 📖 目錄 (Table of Contents)
-
-- [📌 專案核心概念 (Core Philosophy)](#-專案核心概念-core-philosophy)
-- [✨ 系統核心功能 (Key Features)](#-系統核心功能-key-features)
-- [🏗️ 系統架構與資料流 (Architecture)](#️-系統架構與資料流-architecture)
-- [📡 後端 API 規範 (Backend API Endpoints)](#-後端-api-規範-backend-api-endpoints)
-- [🎨 氣溫色階規範 (Temperature Color Scale)](#-氣溫色階規範-temperature-color-scale)
-- [🛡️ 資料清洗與驗證規則 (Data Validation)](#️-資料清洗與驗證規則-data-validation)
-- [📂 專案檔案結構 (Project Structure)](#-專案檔案結構-project-structure)
-- [🚀 快速上手指南 (Quick Start)](#-快速上手指南-quick-start)
-- [🔐 環境變數配置 (Environment Variables)](#-環境變數配置-environment-variables)
-- [🗺️ 開發階段與里程碑 (Development Roadmap)](#️-開發階段與里程碑-development-roadmap)
-- [💡 未來進階發想 (Future Ideas)](#-未來進階發想-future-ideas)
-- [📄 授權與資料來源 (References & License)](#-授權與資料來源-references--license)
+[![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.30+-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![Pandas](https://img.shields.io/badge/Pandas-2.0+-150458?style=for-the-badge&logo=pandas&logoColor=white)](https://pandas.pydata.org/)
+[![Plotly](https://img.shields.io/badge/Plotly-5.18+-3F4F75?style=for-the-badge&logo=plotly&logoColor=white)](https://plotly.com/)
+[![Folium](https://img.shields.io/badge/Folium-0.15+-77B800?style=for-the-badge&logo=leaflet&logoColor=white)](https://python-visualization.github.io/folium/)
+[![CWA Open Data](https://img.shields.io/badge/CWA-Open%20Data-007ACC?style=for-the-badge)](https://opendata.cwa.gov.tw/)
 
 ---
 
-## 📌 專案核心概念 (Core Philosophy)
+## 📌 專案簡介 (Project Overview)
 
-### 為什麼選擇 Windy + Leaflet + FastAPI？
+本專案為 **AIoT_L3_CWA_HW1** 課程作業之完整實作成果。整合 **中央氣象署 (CWA) 開放資料平台 API**、**Python 資料工程清洗**、**SQLite 輕量化關聯式資料庫** 與 **Streamlit 現代互動式 Web App**，打造兼具視覺美感與數據精確度之台灣一週天氣預報儀表板（Taiwan Weather Dashboard）。
 
-傳統地圖方案常受限於靜態底圖或單純的色塊，缺乏氣象動態感；而直接修改氣象數值模型又極其繁瑣。本專案採取**「情境層」與「觀測層」分離**的關鍵架構決策：
-
-```text
-┌─────────────────────────────────────────────────────────────┐
-│ 1. Windy Map Forecast API                                   │
-│    提供高品質動態天氣背景：風場粒子 (Wind Particles)、雲量、降雨等    │
-├─────────────────────────────────────────────────────────────┤
-│ 2. Leaflet 自訂圖層 (Overlay Layer)                           │
-│    Windy 基於 Leaflet 1.4.x 開發，可原生掛載自訂 CWA 測站 Marker、標籤與 Popup │
-├─────────────────────────────────────────────────────────────┤
-│ 3. FastAPI 後端閘道 (Backend Ingestion & Normalization)      │
-│    隱藏 CWA API Key、清洗無效數值、格式正規化、定時排程快取，保護前端安全       │
-└─────────────────────────────────────────────────────────────┘
-```
-
-> [!IMPORTANT]
-> **重要設計原則**：Windy 內建的 `temp` 圖層為全球氣象預報數值模型（Model Forecast）；本專案疊加的自訂圖層則是台灣中央氣象署**真實無人/有人測站實測數據（Actual Observations）**，兩者相輔相成，切勿混淆。
+使用者可透過側邊欄即時連線中央氣象署抓取最新預報，並利用下拉選單自由切換全台 22 縣市或 7 大代表分區，即時檢視最高與最低氣溫走勢圖、日溫差數據表格，更可切換不同預報日期，透過互動式台灣地圖直觀瀏覽全台風貌。
 
 ---
 
-## ✨ 系統核心功能 (Key Features)
+## ✨ 核心特色 (Key Features)
 
-1. **以台灣為中心之動態 Windy 地圖**：
-   - 預設聚焦台灣座標（緯度 `23.7°N`、經度 `121.0°E`，縮放級別 `7`）。
-   - 支援 Windy 內建圖層無縫切換（風場 `wind`、降雨 `rain`、雲量 `clouds`、模型氣溫 `temp`）。
-2. **CWA 實測氣溫標記疊加**：
-   - 透過 `L.circleMarker` 或自訂圖層呈現全台 1,000+ 測站即時氣溫。
-   - 標記顏色隨氣溫動態漸變（藍、綠、黃、橙、深紅）。
-3. **測站資訊互動彈窗 (Popups)**：
-   - 點擊測站即時查看：測站名稱、縣市行政區、即時氣溫（°C）、相對濕度（%）、風速（m/s）、觀測時間。
-4. **健全的自動更新與快取機制**：
-   - 後端定時排程（每 10 分鐘）向氣象署拉取最新觀測資料並快取。
-   - 前端每 5 分鐘無感輪詢更新，並清楚標註「最後觀測更新時間」。
-5. **高效能顯示與防呆架構**：
-   - 若測站資料暴增，支援 Canvas 渲染與標籤層級控制（高縮放級別才顯示文字）。
-   - 當氣象署 API 短暫異常時，自動回退使用後端快取（Stale Cache），前端絕不崩潰。
+- 📡 **氣象署 CWA API 自動化串接**：串接資料集 `F-D0047-091`（臺灣各縣市未來 1 週天氣預報），支援環境變數與安全金鑰管理。
+- 🧹 **資料清洗與分區聚合運算**：運用 Pandas 剖析多層巢狀 JSON 結構，精準擷取最高氣溫 (`MaxT`) 與最低氣溫 (`MinT`)，並自動計算全台 7 大分區平均溫度。
+- 💾 **SQLite 關聯式資料庫持久化**：建立 `data.db` 與 `TemperatureForecasts` 表格，設定 `UNIQUE(regionName, dataDate)` 鍵值防重複寫入（支援 `INSERT OR REPLACE`）。
+- 📊 **Streamlit 互動式儀表板**：
+  - **即時指標卡 (Metrics Cards)**：今日最高溫、最低溫、一週平均氣溫及極端溫差對比。
+  - **區域篩選器 (Region Selector)**：下拉選單快速切換 7 大分區與 22 縣市。
+  - **雙折線趨勢圖 (Plotly Chart)**：最高溫（紅色）、最低溫（藍色）雙軌曲線並標註數值。
+  - **數據總覽表格 (Data Table)**：每日預報數據條列化與自動日溫差計算。
+- 🗺️ **Folium 台灣互動地圖**：依預報日期動態渲染各區域代表座標圓形標記，並以四級色階呈現冷熱感受，點擊彈出詳細資訊視窗。
+- 🗄️ **SQL 即時查詢驗證分頁**：整合直接查詢資料庫之後台驗證功能，檢視不重複地區與指定區域數據，完整對應課程驗證需求。
 
 ---
 
@@ -78,121 +40,98 @@
 
 ```mermaid
 flowchart TD
-    subgraph Data_Source ["資料來源"]
-        A["交通部中央氣象署 CWA OpenData"]
-    end
-
-    subgraph Backend ["FastAPI 後端服務"]
-        B["資料擷取服務 (CWA Client)"]
-        C["正規化與驗證 (Normalize & Validate)"]
-        D[("快取層 (Memory / Redis / DB)")]
-        E["公開 API 路由器 (REST & GeoJSON)"]
-        
-        A -->|"每小時 / 定時 GET"| B
-        B --> C
-        C --> D
-        D --> E
-    end
-
-    subgraph Frontend ["前端 React / Next.js / Vite"]
-        F["Windy Map 核心 (windyInit)"]
-        G["Leaflet CWA Overlay LayerGroup"]
-        H["控制面板 (圖層選擇 / 篩選 / 溫度色階圖例)"]
-        
-        E -->|"GET /api/temperature/latest"| G
-        F <-->|"Leaflet Map 實例整合"| G
-        H -->|"切換圖層 / 風場粒子"| F
-        H -->|"縣市過濾 / 標記顯示"| G
+    A["中央氣象署 CWA Open Data API<br/>(資料集代碼: F-D0047-091)"] -->|"urllib.request / requests (帶入 API Key)"| B["資料擷取與解析模組<br/>(fetch_data.py)"]
+    B -->|"提取 22 縣市每日 MinT / MaxT"| C["Pandas 資料清洗與分區聚合<br/>(計算 7 大分區平均氣溫)"]
+    C -->|"批次寫入 / INSERT OR REPLACE"| D[("SQLite 關聯式資料庫<br/>(data.db: TemperatureForecasts)")]
+    
+    subgraph Streamlit_App ["Streamlit 互動式 Web App (app.py)"]
+        D -->|"SQL 讀取與快取 (@st.cache_data)"| E["資料載入層 (load_forecast_data)"]
+        E --> F["側邊欄控制面板 (更新按鈕 / 地區選單)"]
+        E --> G["頂部關鍵氣溫指標 (st.metric)"]
+        E --> H["Tab 1: Plotly 高低溫走勢圖與數據表"]
+        E --> I["Tab 2: Folium 台灣互動地圖與色階標記"]
+        E --> J["Tab 3: SQLite 資料庫即時 SQL 查詢檢驗"]
     end
 ```
 
 ---
 
-## 📡 後端 API 規範 (Backend API Endpoints)
+## 🗄️ 資料庫結構 (Database Schema)
 
-後端隱藏 CWA 上游複雜度，提供標準乾淨的 JSON 與 GeoJSON 格式。
+資料庫採用 SQLite：`data.db`
 
-### 1. 取得最新全台氣溫資料
-- **URL**: `GET /api/temperature/latest`
-- **範例回應**:
-  ```json
-  {
-    "source": "CWA",
-    "updated_at": "2026-07-02T09:00:00+08:00",
-    "count": 1200,
-    "stations": [
-      {
-        "station_id": "466920",
-        "station_name": "臺北",
-        "county": "臺北市",
-        "town": "中正區",
-        "lat": 25.0377,
-        "lon": 121.5149,
-        "observed_at": "2026-07-02T09:00:00+08:00",
-        "temperature_c": 32.4,
-        "humidity_percent": 67.0,
-        "wind_speed_mps": 2.1
-      }
-    ]
-  }
-  ```
+### `TemperatureForecasts` 表格欄位定義
 
-### 2. 取得 GeoJSON 格式資料 (Leaflet 專用)
-- **URL**: `GET /api/temperature/geojson`
-- **說明**: 直接回傳標準 `FeatureCollection`，方便 Leaflet GeoJSON 圖層直接載入。
+| 欄位名稱 (Column) | 資料型態 (Type) | 主鍵/約束 (Constraints) | 說明 (Description) | 範例 (Example) |
+|---|---|---|---|---|
+| `id` | `INTEGER` | `PRIMARY KEY AUTOINCREMENT` | 記錄流水編號 | `1` |
+| `regionName` | `TEXT` | `NOT NULL` | 分區或縣市名稱 | `中部地區`, `臺北市` |
+| `dataDate` | `TEXT` | `NOT NULL` | 預報日期 (YYYY-MM-DD) | `2026-09-23` |
+| `minT` | `REAL` | `NOT NULL` | 該日最低氣溫 (°C) | `25.3` |
+| `maxT` | `REAL` | `NOT NULL` | 該日最高氣溫 (°C) | `32.7` |
+| `created_at` | `TIMESTAMP` | `DEFAULT CURRENT_TIMESTAMP` | 寫入資料庫時間戳 | `2026-09-23 10:58:26` |
 
-### 3. 單一測站詳細資訊
-- **URL**: `GET /api/temperature/stations/{station_id}`
-
-### 4. 系統健康與快取狀態檢查
-- **URL**: `GET /api/health`
-- **範例回應**:
-  ```json
-  {
-    "status": "ok",
-    "cwa_cache_status": "fresh",
-    "latest_cwa_time": "2026-07-02T09:00:00+08:00"
-  }
-  ```
+> [!NOTE]
+> 表格設定複合唯一約束 `UNIQUE(regionName, dataDate)`，搭配 `INSERT OR REPLACE` 語句，確保每次更新既能覆蓋最新氣溫資料，又絕不產生重複冗餘紀錄。
 
 ---
 
 ## 🎨 氣溫色階規範 (Temperature Color Scale)
 
-前端依據測站氣溫（°C）自動對應不同顏色，提供使用者直覺冷熱感受：
+地圖標記依照區域日平均氣溫進行色階區分，直觀傳遞冷熱感知：
 
-| 氣溫區間 (°C) | 感受描述 | HEX 色碼 | 色票預覽 |
+| 氣溫區間 (°C) | 體感描述 | HEX 色碼 | 色彩代表 |
 |:---:|:---:|:---:|:---:|
-| **< 10°C** | 寒冷 (Cold) | `#2B6CB0` | 🟦 深藍 |
-| **10 – 15°C** | 涼爽 (Cool) | `#3182CE` | 🔷 蔚藍 |
-| **15 – 20°C** | 舒適偏涼 (Mild) | `#38A169` | 🟩 翠綠 |
-| **20 – 25°C** | 舒適 (Comfortable) | `#ECC94B` | 🟨 金黃 |
-| **25 – 30°C** | 溫暖 (Warm) | `#ED8936` | 🟧 橙橘 |
-| **30 – 35°C** | 炎熱 (Hot) | `#E53E3E` | 🟥 鮮紅 |
-| **> 35°C** | 極端酷熱 (Very Hot) | `#9B2C2C` | 🟫 深紅赭褐 |
-
-```typescript
-export function colorByTemperature(temp: number): string {
-  if (temp < 10) return "#2b6cb0";
-  if (temp < 15) return "#3182ce";
-  if (temp < 20) return "#38a169";
-  if (temp < 25) return "#ecc94b";
-  if (temp < 30) return "#ed8936";
-  if (temp < 35) return "#e53e3e";
-  return "#9b2c2c";
-}
-```
+| **< 20.0°C** | 寒冷 / 涼爽 | `#3B82F6` | 🟦 科技蔚藍 |
+| **20.0°C – 25.0°C** | 舒適宜人 | `#10B981` | 🟩 森林翠綠 |
+| **25.0°C – 30.0°C** | 溫暖 / 微熱 | `#F59E0B` | 🟨 暖陽琥珀 |
+| **> 30.0°C** | 酷熱高溫 | `#EF4444` | 🟥 警戒火紅 |
 
 ---
 
-## 🛡️ 資料清洗與驗證規則 (Data Validation)
+## 🚀 快速上手指南 (Quick Start)
 
-氣象署自動觀測資料偶有儀器維護、離線或異常值，後端資料管線（Pipeline）需過濾下列無效紀錄：
+### 1. 取得專案程式碼
+```bash
+git clone https://github.com/Jurass4207/AIoT_L3_CWA_HW1.git
+cd AIoT_L3_CWA_HW1
+```
 
-1. **必要欄位缺失**：缺少 `StationId`、經度、緯度、觀測時間或溫度值。
-2. **特殊缺測值字串**：剔除標註為 `""`、`"X"`、`"NA"`、`"null"`、`"-99"`、`"-999"` 等異常值。
-3. **數值合規性過濾**：氣溫必須能轉換為浮點數，且在極端常理範圍之內（**-20°C ≤ 溫度 ≤ 50°C**）。
-4. **時間戳記合規**：確保解析為標準 ISO 8601 / 時區資訊正確。
+### 2. 建立虛擬環境並安裝依賴
+```bash
+# 建立虛擬環境
+python -m venv venv
+
+# 啟動虛擬環境 (Windows PowerShell)
+.\venv\Scripts\Activate.ps1
+# macOS / Linux 使用：source venv/bin/activate
+
+# 安裝所需套件
+pip install -r requirements.txt
+```
+
+### 3. 設定氣象署 CWA API Key
+專案支援由環境變數或 `.env` 檔案載入授權碼：
+```bash
+# 複製設定檔範本
+cp .env.example .env
+```
+在 `.env` 中填入您的授權碼（或直接使用預設配置）：
+```env
+CWA_API_KEY=CWA-4078E566-C632-4356-8C9F-D1B4AE74E894
+```
+
+### 4. 執行資料擷取與寫入資料庫
+```bash
+python fetch_data.py
+```
+執行後將自動連線中央氣象署抓取最新預報，並在終端機輸出資料庫驗證成果。
+
+### 5. 啟動 Streamlit 儀表板
+```bash
+streamlit run app.py
+```
+啟動成功後，瀏覽器前往 `http://localhost:8501` 即可操作完整互動式天氣儀表板。
 
 ---
 
@@ -200,146 +139,56 @@ export function colorByTemperature(temp: number): string {
 
 ```text
 weather-forecast/
-├── backend/                        # FastAPI 後端服務
-│   ├── app/
-│   │   ├── main.py                 # FastAPI 入口與 CORS 設定
-│   │   ├── config.py               # 讀取環境變數與應用程式設定
-│   │   ├── routers/                # API 路由
-│   │   │   ├── temperature.py      # 氣溫資料相關端點
-│   │   │   └── health.py           # 健康檢查端點
-│   │   ├── services/               # 業務邏輯與排程
-│   │   │   ├── cwa_client.py       # CWA API 請求客戶端
-│   │   │   ├── temperature_service.py # 資料清洗與正規化
-│   │   │   └── cache_service.py    # 資料快取邏輯
-│   │   ├── schemas/                # Pydantic 資料模型
-│   │   │   └── temperature.py
-│   │   └── jobs/                   # 定時自動排程
-│   │       └── refresh_cwa_data.py
-│   ├── requirements.txt            # 後端依賴 (fastapi, uvicorn, httpx 等)
-│   └── .env.example
-├── frontend/                       # 前端 React / Next.js 應用
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── WindyMap.tsx        # Windy API 掛載與地圖容器
-│   │   │   ├── TemperatureLayer.tsx # Leaflet CWA 測站圖層管理
-│   │   │   ├── TemperatureLegend.tsx # 溫度色階圖例
-│   │   │   ├── StationPopup.tsx    # 測站資訊彈跳視窗內容
-│   │   │   └── LayerControlPanel.tsx # Windy 與 CWA 圖層控制面板
-│   │   ├── lib/
-│   │   │   ├── windyLoader.ts      # Windy libBoot.js 動態載入器
-│   │   │   ├── cwaApi.ts           # 呼叫後端 API 用戶端
-│   │   │   └── colorScale.ts       # 溫度色彩換算工具
-│   │   └── types/
-│   │       └── temperature.ts      # TypeScript 類型定義
-│   ├── package.json
-│   └── .env.example
-├── .gitignore
-└── README.md
+├── .env.example            # 環境變數設定範本 (包含 CWA API Key 說明)
+├── .gitignore              # Git 版本控制忽略檔 (排除 .env, venv 等)
+├── README.md               # 專案完整說明與作業規範文件
+├── requirements.txt        # 專案相依套件清單 (requests, pandas, streamlit, folium, plotly)
+├── fetch_data.py           # 氣象署 CWA API 擷取、資料清洗與 SQLite 寫入腳本
+├── app.py                  # Streamlit 視覺化主程式 (含圖表、互動地圖與 SQL 驗證)
+├── data.db                 # SQLite 氣候資料庫 (存放 TemperatureForecasts 表格)
+└── workflow.md             # 系統架構與資料流詳細手冊
 ```
 
 ---
 
-## 🚀 快速上手指南 (Quick Start)
+## 🗺️ 學習步驟對應表 (Curriculum Roadmap: 01 ~ 20)
 
-### 1. 後端啟動 (FastAPI)
+本專案完全對應 **AIoT_L3_CWA_HW1** 課程 20 大步驟：
 
-```bash
-cd backend
-
-# 建立並啟動 Python 虛擬環境
-python -m venv venv
-.\venv\Scripts\Activate.ps1    # Windows
-# source venv/bin/activate     # macOS / Linux
-
-# 安裝依賴
-pip install -r requirements.txt
-
-# 設定環境變數
-cp .env.example .env
-
-# 啟動後端服務 (預設埠號 8000)
-uvicorn app.main:app --reload --port 8000
-```
-
-### 2. 前端啟動 (React / Vite)
-
-```bash
-cd frontend
-
-# 安裝 Node 套件
-npm install
-
-# 設定環境變數
-cp .env.example .env.local
-
-# 啟動前端開發伺服器
-npm run dev
-```
-
-開啟瀏覽器前往 `http://localhost:5173`（或 Vite 指定連結）即可查看疊加 CWA 氣溫標記之 Windy 氣象地圖。
+| 步驟編號 | 學習重點任務 | 實作檔案與對應說明 |
+|:---:|:---|:---|
+| **步驟 01 - 02** | 概念導入與氣象資料價值 | 專案發想與核心架構設計 |
+| **步驟 03** | 取得 CWA API Key | 註冊中央氣象署開放資料平台會員並配置金鑰 |
+| **步驟 04** | API 資料取得 (HTTP Requests) | `fetch_data.py` 之 `fetch_cwa_forecast()` 函式 |
+| **步驟 05** | JSON 巢狀結構解析 | 拆解 `Locations -> Location -> WeatherElement` |
+| **步驟 06** | 提取最高與最低氣溫 (MinT / MaxT) | `parse_temperature_data()` 整合 12 小時區間溫度 |
+| **步驟 07** | 資料整理與分區彙整 (Pandas) | 計算北部、中部、南部、東部等 7 大分區平均溫度 |
+| **步驟 08** | 建立 SQLite 資料庫 (`data.db`) | `fetch_data.py` 之 `init_database()` 建立資料庫 |
+| **步驟 09** | 資料庫設計 (`TemperatureForecasts`) | 定義欄位、資料型別與 `UNIQUE` 防重複插入約束 |
+| **步驟 10** | 查詢資料驗證 (SQL 檢查) | `verify_database()` 執行 DISTINCT 與中部地區示範查詢 |
+| **步驟 11** | Streamlit 入門與頁面配置 | `app.py` 基礎 `set_page_config` 與精美客製 CSS |
+| **步驟 12** | 從 SQLite 資料庫讀取資料 | `load_forecast_data()` 配合 `@st.cache_data` 高效快取 |
+| **步驟 13** | 下拉選單選擇地區 | 側邊欄 `st.selectbox` 排序分區與縣市 |
+| **步驟 14** | 繪製一週最高與最低氣溫折線圖 | `Tab 1` 使用 Plotly 繪製雙色平滑曲線與溫度數值標記 |
+| **步驟 15** | 顯示清晰的一週資料表格 | `Tab 1` 條列每日高低溫、自動換算日溫差 |
+| **步驟 16** | 整合 Web App 介面 | 指標卡 (`st.metric`)、側邊欄即時更新按鈕整合 |
+| **步驟 17** | 台灣地圖視覺化 (Folium + Streamlit) | `Tab 2` 整合 Folium 繪製台灣地圖與 4 級色彩標記 |
+| **步驟 18** | 選擇日期顯示動態氣象地圖 | 日期選擇選單動態更新全台測站溫度與 Popup 視窗 |
+| **步驟 19** | 完整成果展示 (Taiwan Weather Dashboard) | 成果整合與流暢互動體驗 |
+| **步驟 20** | 程式碼品質與優化 | 例外捕捉、編碼相容性處理、模組化重構 |
 
 ---
 
-## 🔐 環境變數配置 (Environment Variables)
+## 💡 延伸應用與未來展望 (Future Enhancements)
 
-### 後端配置 (`backend/.env`)
-
-```env
-# 中央氣象署開放資料平台授權碼 (切勿洩漏至前端)
-CWA_API_KEY=your_cwa_api_key_here
-CWA_DATA_URL=https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001
-CACHE_TTL_SECONDS=600
-ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
-```
-
-### 前端配置 (`frontend/.env.local`)
-
-```env
-# Windy Map Forecast API 金鑰 (在瀏覽器端載入)
-NEXT_PUBLIC_WINDY_API_KEY=your_windy_api_key_here
-# 後端 API 基礎路徑
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
-```
-
-> [!WARNING]
-> **安全性準則**：CWA API Key 屬於伺服器端憑證，**嚴禁**編譯進前端客戶端程式碼或推送至公開 GitHub 儲存庫；Windy Map API Key 為前端專用，可透過網域名稱白名單進行存取限制。
+1. **AI 天氣穿搭與生活建議**：串接大型語言模型 (如 Gemini API)，依據今日溫差與天氣狀況自動生成個人化出門穿搭與行程提示。
+2. **LINE Bot 晨間氣象推播**：排程每日清晨 7:00 自動推播當日即時溫度與降雨預報給使用者。
+3. **智慧農漁業低溫/高溫特報**：設定警戒溫度閾值（如低於 12°C 寒害防護），自動觸發告警通知。
 
 ---
 
-## 🗺️ 開發階段與里程碑 (Development Roadmap)
+## 👨‍🏫 鳴謝與資料來源 (Acknowledgments & License)
 
-- [x] **階段 1：MVP 核心實作**
-  - [x] 完成 FastAPI `/api/temperature/latest` 基礎端點與資料清洗
-  - [x] 成功載入 Windy Map 並居中聚焦於台灣
-  - [x] 利用 Leaflet 繪製圓形彩色氣溫標記與資訊彈跳視窗（Popup）
-  - [x] 提供氣溫色階圖例與手動更新按鈕
-- [ ] **階段 2：儀表板進階控制**
-  - [ ] 5 分鐘前端自動無感輪詢更新機制
-  - [ ] 縣市與鄉鎮下拉選單篩選過濾器
-  - [ ] 測站關鍵字快速搜尋定位
-  - [ ] 整合 Windy 原生圖層切換器（風場、雲量、降雨、溫度）
-- [ ] **階段 3：視覺化體驗強化**
-  - [ ] 熱點圖模式（Heatmap Layer）
-  - [ ] 時間滑桿與過去 24 小時溫度變化回放
-  - [ ] 支援 RWD 手機版面佈局優化
-- [ ] **階段 4：正式環境佈署與監控**
-  - [ ] 導入 Redis 快取與 PostgreSQL/PostGIS 歷程儲存
-  - [ ] API 速率限制 (Rate Limiting) 與 Sentry 錯誤追蹤
-  - [ ] 容器化打包 (Docker & Docker Compose)
-
----
-
-## 💡 未來進階發想 (Future Ideas)
-
-1. **模式 vs 實測對比分析**：比對 Windy 數值預報模型（ECMWF / GFS）與 CWA 地面真實觀測之偏差。
-2. **全台高低溫榜單**：即時排名前 10 名最熱與最冷測站。
-3. **語音廣播功能**：自動生成天氣摘要語音播報（例如：「目前全台最高溫出現在台南市 35.2°C」）。
-4. **教學情境模式**：提供學生在線比對氣象測站觀測、了解空間內插演算法與大氣視覺化。
-
----
-
-## 📄 授權與資料來源 (References & License)
-
-- **氣象觀測資料來源**：[交通部中央氣象署 開放資料平台](https://opendata.cwa.gov.tw/)（採用「政府資料開放授權條款-第1版」）
-- **地圖與風場引擎**：[Windy Map Forecast API](https://api.windy.com/) (Based on Leaflet 1.4.x)
-- **授權協議**：本專案採用 [MIT License](LICENSE) 開源授權。
+- **課程導師**：煥哥（AI 創新微課程）
+- **資料來源**：[交通部中央氣象署 開放資料平台 (CWA OpenData)](https://opendata.cwa.gov.tw/)
+- **開源授權**：本專案採用 [MIT License](LICENSE) 授權。

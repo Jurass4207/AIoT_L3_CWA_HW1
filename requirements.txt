@@ -1,6 +1,2 @@
+# Vercel Serverless Function 專用相依套件 (極簡無龐大套件，加速部署)
 requests>=2.31.0
-pandas>=2.0.0
-streamlit>=1.30.0
-folium>=0.15.0
-streamlit-folium>=0.18.0
-plotly>=5.18.0

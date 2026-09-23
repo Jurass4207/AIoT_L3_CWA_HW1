@@ -1,0 +1,7 @@
+# Streamlit 本地互動儀表板相依套件 (可選)
+requests>=2.31.0
+pandas>=2.0.0
+streamlit>=1.30.0
+folium>=0.15.0
+streamlit-folium>=0.18.0
+plotly>=5.18.0

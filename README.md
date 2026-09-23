@@ -64,7 +64,7 @@ flowchart TD
 
     C & D & E -->|"INSERT OR REPLACE 批次寫入"| F[("SQLite 關聯式資料庫<br/>(data.db: StationObservations)")]
 
-    subgraph Dashboard ["Streamlit 互動儀表板 (app.py)"]
+    subgraph Dashboard ["Streamlit 互動儀表板 (streamlit_app.py)"]
         F -->|"@st.cache_data 讀取資料庫"| G["儀表板核心運算層"]
         G --> H["關鍵指標 Cards (st.metric)"]
         G --> I["Tab 1: Plotly Top 10 排行榜與縣市均溫圖"]
@@ -157,9 +157,10 @@ python fetch_data.py
 ```
 程式將連線中央氣象署拉取 `O-A0003-001`，執行清洗並將 330+ 測站即時觀測存入 `data.db`。
 
-### 5. 啟動 Streamlit 儀表板 (本地端模式)
+### 5. 啟動 Streamlit 儀表板 (本地端模式，可選)
 ```bash
-streamlit run app.py
+pip install -r requirements-streamlit.txt
+streamlit run streamlit_app.py
 ```
 啟動完成後，開啟瀏覽器前往 `http://localhost:8501` 即可瀏覽互動式即時天氣儀表板。
 
@@ -178,7 +179,7 @@ streamlit run app.py
      - KEY: `CWA_API_KEY`
      - VALUE: `CWA-4078E566-C632-4356-8C9F-D1B4AE74E894`
 4. **點擊「Deploy」**：
-   - 等待約 30 秒至 1 分鐘，Vercel 將自動完成部署，並為您產生專屬公開網址（例如 `https://aiot-l3-cwa-hw1.vercel.app`）！
+   - 等待約 20~30 秒，Vercel 將自動完成部署，並為您產生專屬公開網址（例如 `https://aiot-l3-cwa-hw1.vercel.app`）！
 
 ---
 
@@ -194,10 +195,11 @@ weather-forecast/
 ├── style.css               # 現代極致暗黑玻璃擬態 CSS 樣式
 ├── app.js                  # 前端互動地圖、圖層切換與 Chart.js 核心邏輯
 ├── vercel.json             # Vercel 路由設定與專案部署配置
-├── app.py                  # Streamlit 本地互動儀表板主程式
+├── streamlit_app.py        # Streamlit 本地互動儀表板主程式
 ├── fetch_data.py           # CWA O-A0003-001 本地資料擷取與 SQLite 寫入腳本
 ├── data.db                 # SQLite 氣候資料庫
-├── requirements.txt        # Python 相依套件清單
+├── requirements.txt        # Vercel 部署相依套件清單 (輕量快速)
+├── requirements-streamlit.txt # Streamlit 本地完整相依套件清單
 ├── .env.example            # 環境變數設定範本
 ├── .gitignore              # Git 版本控制忽略檔
 └── README.md               # 專案完整說明手冊
@@ -218,7 +220,7 @@ weather-forecast/
 | **步驟 08** | 建立 SQLite 資料庫 (`data.db`) | `fetch_data.py` 之 `init_database()` 建立資料庫 |
 | **步驟 09** | 資料庫設計 (`StationObservations`) | 設定欄位型別與 `UNIQUE(station_id, observed_at)` 防重約束 |
 | **步驟 10** | 查詢資料驗證 (SQL 檢查) | `verify_database()` 統計縣市測站數與全台高低溫 Top 3 |
-| **步驟 11** | Streamlit 入門與頁面配置 | `app.py` 現代漸變標題與自訂 CSS 樣式 |
+| **步驟 11** | Streamlit 入門與頁面配置 | `streamlit_app.py` 現代漸變標題與自訂 CSS 樣式 |
 | **步驟 12** | 從 SQLite 讀取即時觀測資料 | `load_observation_data()` 結合 `@st.cache_data` 高效快取 |
 | **步驟 13** | 縣市下拉選單與關鍵字搜尋過濾 | 側邊欄 `st.selectbox` 與 `st.text_input` 動態篩選 |
 | **步驟 14** | 繪製高低溫 Top 10 與縣市均溫圖 | `Tab 1` 使用 Plotly 繪製水平排行榜長條圖與漸變配色 |

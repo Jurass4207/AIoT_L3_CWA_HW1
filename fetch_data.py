@@ -44,7 +44,7 @@ DATASET_ID = "O-A0003-001"  # 局屬氣象站-現在天氣觀測報告 (即時�
 DB_PATH = os.path.join(os.path.dirname(__file__), "data.db")
 
 
-def _clean_float(val, min_val=None, max_val=None):
+def _clean_float(val, min_val=None, max_val=None, digits=1):
     """輔助函式：安全轉換浮點數，過濾特殊缺測字串與超出合理範圍的值"""
     if val is None:
         return None
@@ -57,7 +57,9 @@ def _clean_float(val, min_val=None, max_val=None):
             return None
         if max_val is not None and f > max_val:
             return None
-        return round(f, 1)
+        if digits is not None:
+            return round(f, digits)
+        return f
     except (ValueError, TypeError):
         return None
 
@@ -117,15 +119,15 @@ def parse_station_observations(json_data: dict) -> list[dict]:
         lat, lon = None, None
         for coord in coords_list:
             if coord.get("CoordinateName") == "WGS84":
-                lat = _clean_float(coord.get("StationLatitude"), min_val=20.0, max_val=27.5)
-                lon = _clean_float(coord.get("StationLongitude"), min_val=118.0, max_val=123.5)
+                lat = _clean_float(coord.get("StationLatitude"), min_val=20.0, max_val=27.5, digits=4)
+                lon = _clean_float(coord.get("StationLongitude"), min_val=118.0, max_val=123.5, digits=4)
                 break
         
         # 若無標註 WGS84 則回退使用第一組座標
         if lat is None or lon is None:
             if coords_list:
-                lat = _clean_float(coords_list[0].get("StationLatitude"), min_val=20.0, max_val=27.5)
-                lon = _clean_float(coords_list[0].get("StationLongitude"), min_val=118.0, max_val=123.5)
+                lat = _clean_float(coords_list[0].get("StationLatitude"), min_val=20.0, max_val=27.5, digits=4)
+                lon = _clean_float(coords_list[0].get("StationLongitude"), min_val=118.0, max_val=123.5, digits=4)
 
         if lat is None or lon is None:
             skipped_count += 1

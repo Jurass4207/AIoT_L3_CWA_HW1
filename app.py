@@ -206,11 +206,16 @@ def load_observation_data(db_path: str = DB_PATH) -> pd.DataFrame:
             return pd.DataFrame()
 
     query = """
-        SELECT id, station_id, station_name, county, town, lat, lon,
-               observed_at, temperature, humidity, wind_speed, weather,
-               precipitation, daily_high, daily_low, created_at
-        FROM StationObservations
-        ORDER BY temperature DESC;
+        SELECT s.id, s.station_id, s.station_name, s.county, s.town, s.lat, s.lon,
+               s.observed_at, s.temperature, s.humidity, s.wind_speed, s.weather,
+               s.precipitation, s.daily_high, s.daily_low, s.created_at
+        FROM StationObservations s
+        INNER JOIN (
+            SELECT station_id, MAX(observed_at) as max_time
+            FROM StationObservations
+            GROUP BY station_id
+        ) latest ON s.station_id = latest.station_id AND s.observed_at = latest.max_time
+        ORDER BY s.temperature DESC;
     """
     df = pd.read_sql_query(query, conn)
     conn.close()
@@ -279,13 +284,19 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("**地圖顯示模式 (Map Controls)**")
     
-    # 標籤顯示開關 (復刻「氣溫數字標籤」選項)
-    show_labels = st.checkbox("氣溫數字膠囊標籤", value=True, help="在地圖點位上直接標註氣溫數值")
+    # 標籤樣式選擇 (預設為經典發光圓點)
+    marker_style = st.radio(
+        "測站標記樣式",
+        options=["● 經典發光圓點 (推薦)", "🏷️ 氣溫數字膠囊"],
+        index=0,
+        horizontal=True
+    )
+    show_labels = (marker_style == "🏷️ 氣溫數字膠囊")
     
-    # 底圖切換 (復刻「深色」vs「街道圖」)
+    # 底圖切換 (深色採用無浮水印之 Esri Dark Canvas)
     basemap_choice = st.radio(
         "底圖模式 (Basemap)",
-        options=["深色 (Dark Matter)", "街道圖 (OpenStreetMap)"],
+        options=["深色 (Esri Dark Canvas)", "街道圖 (OpenStreetMap)"],
         index=0,
         horizontal=True
     )
@@ -424,10 +435,10 @@ with tab_map:
         center_lon = 120.95
         zoom_level = 7.5
 
-    # 決定底圖樣式
+    # 決定底圖樣式 (使用完全無浮水印的暗黑圖磚)
     if basemap_choice.startswith("深色"):
-        tiles_url = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        tiles_attr = "&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> &copy; <a href='https://carto.com/attributions'>CARTO</a>"
+        tiles_url = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"
+        tiles_attr = "Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ"
     else:
         tiles_url = "OpenStreetMap"
         tiles_attr = None
@@ -486,17 +497,17 @@ with tab_map:
                 tooltip=f"{st_name} ({county_str}{town_str}): {temp}°C"
             ).add_to(m)
         else:
-            # 圓形標記模式 (CircleMarker)
+            # 圓形發光標記模式 (CircleMarker)
             folium.CircleMarker(
                 location=[row["lat"], row["lon"]],
-                radius=6.5,
+                radius=7.5,
                 popup=folium.Popup(popup_html, max_width=290),
-                tooltip=f"{st_name}: {temp}°C",
+                tooltip=f"{st_name} ({county_str}{town_str}): {temp}°C",
                 color="#ffffff",
-                weight=1.2,
+                weight=1.5,
                 fill=True,
                 fill_color=color,
-                fill_opacity=0.9
+                fill_opacity=0.88
             ).add_to(m)
 
     # 渲染 Folium 地圖

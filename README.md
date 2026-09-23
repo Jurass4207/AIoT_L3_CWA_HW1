@@ -157,11 +157,28 @@ python fetch_data.py
 ```
 程式將連線中央氣象署拉取 `O-A0003-001`，執行清洗並將 330+ 測站即時觀測存入 `data.db`。
 
-### 5. 啟動 Streamlit 儀表板
+### 5. 啟動 Streamlit 儀表板 (本地端模式)
 ```bash
 streamlit run app.py
 ```
 啟動完成後，開啟瀏覽器前往 `http://localhost:8501` 即可瀏覽互動式即時天氣儀表板。
+
+### 6. 一鍵部署至 Vercel (雲端模式)
+本專案已完全適配 Vercel 原生全端架構（靜態前端 + Python Serverless API）：
+
+1. **推送代碼至 GitHub**：
+   ```bash
+   git push origin main
+   ```
+2. **前往 Vercel 建立專案**：
+   - 登入 [vercel.com](https://vercel.com/)，點擊 **「Add New...」->「Project」**。
+   - 選擇您的 GitHub 儲存庫 `Jurass4207/AIoT_L3_CWA_HW1` 並點擊 **「Import」**。
+3. **設定環境變數**：
+   - 在 **Environment Variables** 區塊中新增：
+     - KEY: `CWA_API_KEY`
+     - VALUE: `CWA-4078E566-C632-4356-8C9F-D1B4AE74E894`
+4. **點擊「Deploy」**：
+   - 等待約 30 秒至 1 分鐘，Vercel 將自動完成部署，並為您產生專屬公開網址（例如 `https://aiot-l3-cwa-hw1.vercel.app`）！
 
 ---
 
@@ -169,15 +186,21 @@ streamlit run app.py
 
 ```text
 weather-forecast/
-├── .env.example            # 環境變數設定範本 (包含 CWA API Key 說明)
-├── .env                    # 本地授權金鑰設定檔 (受 .gitignore 保護)
+├── api/
+│   └── weather.py          # Vercel Python Serverless Function (GET /api/weather)
+├── data/
+│   └── latest.json         # 330+ 測站預快取靜態備份 (確保即時首屏秒開)
+├── index.html              # Vercel 前端首頁 (全螢幕 Leaflet 氣象地圖)
+├── style.css               # 現代極致暗黑玻璃擬態 CSS 樣式
+├── app.js                  # 前端互動地圖、圖層切換與 Chart.js 核心邏輯
+├── vercel.json             # Vercel 路由設定與專案部署配置
+├── app.py                  # Streamlit 本地互動儀表板主程式
+├── fetch_data.py           # CWA O-A0003-001 本地資料擷取與 SQLite 寫入腳本
+├── data.db                 # SQLite 氣候資料庫
+├── requirements.txt        # Python 相依套件清單
+├── .env.example            # 環境變數設定範本
 ├── .gitignore              # Git 版本控制忽略檔
-├── README.md               # 專案完整說明與作業規範文件
-├── requirements.txt        # 相依套件清單 (requests, pandas, streamlit, folium, plotly)
-├── fetch_data.py           # CWA O-A0003-001 API 擷取、資料清洗與 SQLite 寫入腳本
-├── app.py                  # Streamlit 視覺化主程式 (含 300+ 測站地圖、排行榜、SQL 檢驗)
-├── data.db                 # SQLite 氣候資料庫 (存放 StationObservations 表格)
-└── workflow.md             # 系統架構與資料流詳細手冊
+└── README.md               # 專案完整說明手冊
 ```
 
 ---

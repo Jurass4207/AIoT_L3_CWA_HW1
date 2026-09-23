@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>台灣即時氣象地圖 | Taiwan Live Weather Map</title>
+  <meta name="description" content="中央氣象署 O-A0003-001 全台 330+ 測站即時氣溫與氣候要素視覺化地圖（類 Windy 暗黑動態風格）" />
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⛅</text></svg>">
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app-container">
+    <!-- 地圖主容器 -->
+    <div id="map"></div>
+
+    <!-- 頂部浮動狀態與指標列 -->
+    <header class="top-header">
+      <div class="brand-card">
+        <div class="brand-icon">⛅</div>
+        <div>
+          <div style="display:flex; align-items:center;">
+            <span class="brand-title">台灣即時氣象地圖</span>
+            <span class="status-pill"><span class="status-dot"></span> <span id="status-text">連線同步中</span></span>
+          </div>
+          <div class="brand-sub">中央氣象署 O-A0003-001 實測資料 · <span id="obs-time">更新中...</span></div>
+        </div>
+      </div>
+
+      <!-- 快速指標卡片 (桌機版顯示) -->
+      <div class="metrics-strip">
+        <div class="metric-pill">
+          <span style="font-size:1.1rem;">📍</span>
+          <div>
+            <div class="metric-pill-label">有效測站</div>
+            <div class="metric-pill-val" id="metric-count">-- 站</div>
+          </div>
+        </div>
+        <div class="metric-pill">
+          <span style="font-size:1.1rem;">🔥</span>
+          <div>
+            <div class="metric-pill-label">全台最高溫</div>
+            <div class="metric-pill-val" style="color:#f87171;" id="metric-hot">-- °C</div>
+          </div>
+        </div>
+        <div class="metric-pill">
+          <span style="font-size:1.1rem;">❄️</span>
+          <div>
+            <div class="metric-pill-label">全台最低溫</div>
+            <div class="metric-pill-val" style="color:#60a5fa;" id="metric-cold">-- °C</div>
+          </div>
+        </div>
+        <div class="metric-pill">
+          <span style="font-size:1.1rem;">🌡️</span>
+          <div>
+            <div class="metric-pill-label">平均氣溫</div>
+            <div class="metric-pill-val" style="color:#38bdf8;" id="metric-avg">-- °C</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 開啟數據排行榜按鈕 -->
+      <button class="btn-header" id="btn-open-modal">
+        <span>📊</span> 氣溫排行與數據表
+      </button>
+    </header>
+
+    <!-- 右側懸浮控制面板 -->
+    <aside class="control-panel">
+      <div>
+        <div class="panel-title" style="margin-bottom:8px;">觀測圖層 (Layer)</div>
+        <div class="layer-buttons">
+          <button class="layer-btn active" data-layer="temp"><span>🌡️</span> 氣溫 (Temperature)</button>
+          <button class="layer-btn" data-layer="humidity"><span>💧</span> 相對濕度 (Humidity)</button>
+          <button class="layer-btn" data-layer="wind"><span>💨</span> 風速 (Wind Speed)</button>
+          <button class="layer-btn" data-layer="rain"><span>🌧️</span> 時雨量 (Rainfall)</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel-title" style="margin-bottom:8px;">地圖選項 (Display)</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <label class="toggle-row">
+            <span>氣溫數字膠囊標籤</span>
+            <span class="toggle-switch">
+              <input type="checkbox" id="toggle-label" />
+              <span class="toggle-slider"></span>
+            </span>
+          </label>
+          <label class="toggle-row">
+            <span>切換深色底圖</span>
+            <span class="toggle-switch">
+              <input type="checkbox" id="toggle-basemap" checked />
+              <span class="toggle-slider"></span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div>
+        <div class="panel-title" style="margin-bottom:6px;">縣市過濾 (County)</div>
+        <select class="filter-select" id="select-county">
+          <option value="ALL">全台所有縣市 (全部)</option>
+        </select>
+      </div>
+
+      <div>
+        <div class="panel-title" style="margin-bottom:6px;">測站搜尋 (Search)</div>
+        <input type="text" class="filter-input" id="input-search" placeholder="輸入測站或鄉鎮名稱..." />
+      </div>
+
+      <button class="layer-btn" id="btn-refresh" style="justify-content:center; background:rgba(255,255,255,0.08); font-weight:600; color:#fff;">
+        <span>🔄</span> 立即同步最新觀測
+      </button>
+    </aside>
+
+    <!-- 右下角漸變色階進度條 -->
+    <div class="bottom-legend">
+      <div class="legend-header">
+        <span class="legend-unit" id="legend-unit">°C</span>
+        <span class="legend-title" id="legend-title">即時地面氣溫色階</span>
+      </div>
+      <div class="legend-bar"></div>
+      <div class="legend-ticks" id="legend-ticks">
+        <span>5</span>
+        <span>10</span>
+        <span>15</span>
+        <span>20</span>
+        <span>24</span>
+        <span>28</span>
+        <span>32</span>
+        <span>36</span>
+      </div>
+    </div>
+
+    <!-- 數據分析與排行榜彈窗 (Modal Drawer) -->
+    <div class="modal-overlay" id="modal-rankings">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">📊 全台氣象測站即時統計與排行榜</div>
+          <button class="btn-close" id="btn-close-modal">&times;</button>
+        </div>
+
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-title">🔥 全台即時最高溫 Top 10</div>
+            <canvas id="chart-hot" height="220"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">❄️ 全台即時最低溫 Top 10</div>
+            <canvas id="chart-cold" height="220"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title">🏙️ 各縣市平均氣溫比較</div>
+          <canvas id="chart-county" height="130"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-title" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>📋 全台測站詳細觀測數據列表</span>
+            <span style="font-size:0.75rem; color:#9ca3af;" id="table-count">337 站</span>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="data-table">
+              <thead>
+                <tr>
+                  <th>測站編號</th>
+                  <th>測站名稱</th>
+                  <th>縣市</th>
+                  <th>鄉鎮</th>
+                  <th>氣溫 (°C)</th>
+                  <th>濕度 (%)</th>
+                  <th>風速 (m/s)</th>
+                  <th>雨量 (mm)</th>
+                  <th>當日最高 (°C)</th>
+                  <th>當日最低 (°C)</th>
+                  <th>觀測時間</th>
+                </tr>
+              </thead>
+              <tbody id="table-body">
+                <!-- 動態注入表格資料 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CDN 腳本 -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- 核心邏輯腳本 -->
+  <script src="app.js"></script>
+</body>
+</html>
